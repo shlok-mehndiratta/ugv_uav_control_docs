@@ -1,8 +1,37 @@
+\appendix
 \section{Symbol Definitions}
-\begin{tabular}{ll}
-$x, y$ & World-frame position \\
-$\theta$ & Heading angle \\
-$v$ & Linear velocity \\
-$\omega$ & Angular velocity \\
+
+\begin{center}
+\begin{tabular}{|c|l|c|}
+\hline
+\textbf{Symbol} & \textbf{Definition} & \textbf{Units} \\
+\hline
+$x, y$ & World-frame position & m \\
+\hline
+$\theta$ & Heading (yaw angle) & rad \\
+\hline
+$v$ & Linear velocity & m/s \\
+\hline
+$\omega$ & Angular velocity & rad/s \\
+\hline
+$\delta$ & Steering angle (Stanley controller output) & rad \\
+\hline
+$\gamma$ & Path curvature & 1/m \\
+\hline
+$e_{cte}$ & Cross-track error & m \\
+\hline
+$\psi_e$ & Heading error & rad \\
+\hline
+$L$ & Wheel separation & m \\
+\hline
+$r$ & Wheel radius & m \\
+\hline
+$dt$ & Discretization time step & s \\
+\hline
+$N$ & MPC prediction horizon & -- \\
+\hline
+$w_d, w_h, w_r$ & Cost function weights & -- \\
+\hline
 \end{tabular}
+\end{center}
 

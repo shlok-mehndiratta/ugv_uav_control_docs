@@ -1,0 +1,74 @@
+\section{Modeling Assumptions}
+
+\subsection{Robot Kinematic Model}
+
+The TurtleBot3 Burger is modeled as a planar unicycle system with state
+\[
+\mathbf{x} =
+\begin{bmatrix}
+x & y & \theta
+\end{bmatrix}^{T}
+\in \mathbb{R}^2 \times S^1,
+\]
+where $(x,y)$ denotes the robot position in the world frame and $\theta$ is the heading (yaw) angle.
+
+\paragraph{Robot Parameters}
+The physical parameters used in the model are:
+\begin{itemize}
+\item Wheel separation: $L = 0.160~\mathrm{m}$
+\item Wheel radius: $r = 0.033~\mathrm{m}$
+\item Mass: $m = 0.825~\mathrm{kg}$
+\item Maximum linear acceleration: $a_{\max} = 1.0~\mathrm{m/s^2}$
+\end{itemize}
+
+\paragraph{Differential-Drive to Unicycle Mapping}
+The relationship between differential wheel velocities and unicycle control inputs is given by
+\[
+v = \frac{r(\omega_R + \omega_L)}{2}, \qquad
+\omega = \frac{r(\omega_R - \omega_L)}{L},
+\]
+where $\omega_R$ and $\omega_L$ denote the angular velocities of the right and left wheels, respectively.
+
+\subsection{Camera Model}
+
+The overhead camera is modeled using an ideal pinhole projection model. The assumed camera parameters are:
+\begin{itemize}
+\item Horizontal field of view: $\phi = 1.047~\mathrm{rad}$ ($60^\circ$)
+\item Camera height above the ground plane: $h = 10.0~\mathrm{m}$
+\item Image resolution: $1920 \times 1080~\mathrm{px}$
+\end{itemize}
+
+\paragraph{World-to-Image Scaling}
+The physical width of the observable ground region is
+\[
+w_{\text{world}} = 2h \tan\!\left(\frac{\phi}{2}\right).
+\]
+
+Using the image width $w_{\text{image}}$, the pixel-to-meter conversion factor is
+\[
+s = \frac{w_{\text{world}}}{w_{\text{image}}}
+\approx 0.00601~\mathrm{m/px}.
+\]
+
+\paragraph{Critical Assumption}
+The camera optical axis is assumed to be perfectly vertical. Any deviation from this alignment introduces perspective and radial distortions, which are not corrected in the current implementation.
+
+\subsection{ArUco Marker Localization}
+
+Robot pose estimation is performed using an ArUco fiducial marker (ID~55, DICT\_6X6\_250). The marker is mounted $0.2~\mathrm{m}$ above the robot base on a $0.5~\mathrm{m} \times 0.5~\mathrm{m}$ planar plate.
+
+\begin{itemize}
+\item \textbf{Heading Estimation}:  
+The robot heading is estimated from the orientation of the detected marker as
+\[
+\theta_{\text{robot}} =
+\operatorname{atan2}
+\bigl(y_{\text{top}} - y_{\text{center}},\;
+      x_{\text{top}} - x_{\text{center}}\bigr),
+\]
+where $(x_{\text{top}}, y_{\text{top}})$ denotes the midpoint of the marker’s top edge and $(x_{\text{center}}, y_{\text{center}})$ is the marker center.
+
+\item \textbf{Limitation}:  
+Heading estimation accuracy degrades as the marker moves farther from the camera center due to perspective distortion. No geometric correction or compensation is applied.
+\end{itemize}
+

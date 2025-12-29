@@ -1,7 +1,62 @@
+% -------------------------------------------------
+% Math and symbols
+% -------------------------------------------------
 \usepackage{amsmath, amssymb}
+
+% -------------------------------------------------
+% Figures and tables
+% -------------------------------------------------
 \usepackage{graphicx}
-\usepackage{hyperref}
 \usepackage{booktabs}
+\usepackage{caption}
+
+% Improve table readability globally
+\renewcommand{\arraystretch}{1.2}
+
+% -------------------------------------------------
+% Page geometry
+% -------------------------------------------------
 \usepackage{geometry}
 \geometry{margin=1in}
+
+% -------------------------------------------------
+% Typography and spacing
+% -------------------------------------------------
+\usepackage{setspace}
+\usepackage{microtype}
+
+\setstretch{1.08}          % subtle line spacing (not double-spaced)
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+% -------------------------------------------------
+% Section and heading formatting
+% -------------------------------------------------
+\usepackage{titlesec}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}
+  {\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}
+  {\thesubsubsection}{1em}{}
+
+% -------------------------------------------------
+% Hyperlinks
+% -------------------------------------------------
+\usepackage[hidelinks]{hyperref}
+
+% -------------------------------------------------
+% Caption formatting
+% -------------------------------------------------
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  skip=6pt
+}
 

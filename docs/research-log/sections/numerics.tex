@@ -1,0 +1,35 @@
+\section{Numerical Methods Analysis}
+
+\subsection{Discretization Error}
+
+Forward Euler integration exhibits a local truncation error of order $O(dt^2)$ per integration step, which accumulates to a global error of order $O(dt)$ over a finite prediction horizon.
+
+For a sampling period of $dt = 0.2~\mathrm{s}$ and a prediction horizon of $N = 5$, the following observations apply:
+\begin{itemize}
+\item The maximum trajectory drift over the horizon becomes significant for high-curvature paths.
+\item Exact arc integration eliminates this discretization error for motion segments with constant $(v, \omega)$.
+\end{itemize}
+
+\subsection{Optimization Convergence}
+
+The Sequential Least-Squares Quadratic Programming (SLSQP) algorithm does not guarantee convergence for non-convex optimization problems. In this implementation, the cost function is non-convex due to:
+\begin{itemize}
+\item Trigonometric terms appearing in the state propagation equations.
+\item Angle wrapping effects in the heading error formulation.
+\end{itemize}
+
+\paragraph{Mitigation Strategy}
+Convergence robustness is improved by initializing the optimizer using the solution from the previous control step. Additionally, the maximum number of solver iterations is capped at $20$ to bound computation time.
+
+\subsection{Numerical Stability}
+
+The exact arc integration formulation contains the term $\tfrac{v}{\omega}$, which becomes ill-conditioned as $\omega \rightarrow 0$.
+
+\paragraph{Stability Handling}
+To maintain numerical stability, the integration scheme switches to a straight-line approximation when
+\[
+|\omega| < 10^{-4}.
+\]
+
+This conditional handling prevents numerical singularities while preserving accuracy in the low-curvature limit.
+

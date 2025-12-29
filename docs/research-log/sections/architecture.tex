@@ -1,0 +1,74 @@
+\section{Implementation Architecture}
+
+\subsection{ROS 2 Node Graph}
+
+The system is organized as a modular ROS~2 computation graph integrating simulation, perception, planning, and control. The architecture follows a layered design that clearly separates responsibilities while maintaining deterministic data flow.
+
+\subsubsection*{Simulation Layer}
+The simulation layer provides the physical and sensory environment:
+\begin{itemize}
+\item Ground robot exposing a velocity command interface.
+\item Aerial platform supplying an overhead visual perspective.
+\item Ground plane environment used for path visualization.
+\end{itemize}
+
+\subsubsection*{Middleware Bridge}
+A middleware bridge connects the simulator to the ROS~2 ecosystem:
+\begin{itemize}
+\item Translates simulator-specific messages into ROS~2-compatible formats.
+\item Converts velocity commands into stamped messages.
+\item Forwards aerial camera data to downstream perception nodes.
+\end{itemize}
+
+\subsubsection*{Perception and Planning}
+This layer extracts navigational intent from sensor data:
+\begin{itemize}
+\item Overhead image processing extracts path geometry.
+\item Waypoints are generated and published for downstream control.
+\end{itemize}
+
+\subsubsection*{Control Layer}
+The control layer executes motion commands based on waypoint input:
+\begin{itemize}
+\item Multiple interchangeable controllers (Stanley, Pure Pursuit, MPC).
+\item Consumes waypoint messages and outputs velocity commands.
+\item Commands are routed back to the simulator through the middleware bridge.
+\end{itemize}
+
+This layered organization enforces separation of concerns while maintaining a clear and deterministic flow of information.
+
+\subsection{Message Type Design Decision}
+
+\paragraph{Issue Encountered}
+A mismatch was observed between the velocity command message type expected by the simulation bridge and the type originally published by the controllers.
+
+\paragraph{Resolution}
+All controller outputs were standardized to publish stamped velocity messages, including both a timestamp and a reference frame identifier.
+
+\paragraph{Rationale}
+The use of stamped messages provides several advantages:
+\begin{itemize}
+\item Enables future latency compensation and time-aligned control.
+\item Supports reliable data association for logging and debugging.
+\item Ensures compliance with recommended ROS~2 communication practices.
+\end{itemize}
+
+This design choice improves robustness and extensibility without increasing controller complexity.
+
+\subsection{Launch System Architecture}
+
+The system launch configuration is designed to maximize flexibility and runtime configurability. Its primary responsibilities include:
+
+\begin{itemize}
+\item \textbf{Dynamic Model Loading}:  
+Simulation models are loaded at runtime, programmatically modified to substitute visual elements (e.g., track textures), and instantiated into the environment.
+
+\item \textbf{Controller Selection}:  
+The active control strategy is selected via a runtime argument, enabling seamless switching between Stanley, Pure Pursuit, and MPC without code modification.
+
+\item \textbf{Environment Configuration}:  
+Simulation resource paths are extended at launch time to ensure that custom models and assets are discoverable by the simulator.
+\end{itemize}
+
+This launch architecture decouples configuration from implementation, enabling rapid experimentation and reproducibility.
+

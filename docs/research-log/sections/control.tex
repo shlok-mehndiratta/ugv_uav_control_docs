@@ -1,0 +1,241 @@
+\section{Control Strategy Evolution}
+
+\subsection{Pure Pursuit Controller}
+
+\paragraph{Mathematical Foundation}
+Pure Pursuit is a geometric path-following controller that computes a circular arc connecting the robot to a look-ahead waypoint.
+
+The curvature of the arc is given by
+\[
+\gamma = \frac{2y}{L_d^2},
+\qquad
+L_d = \sqrt{x^2 + y^2},
+\]
+where $L_d$ is the Euclidean distance to the waypoint and $y$ is the lateral offset in the robot frame.
+
+The commanded angular velocity is
+\[
+\omega = v \cdot \gamma.
+\]
+
+\paragraph{Implementation}
+In the implemented formulation, the curvature is computed as
+\[
+\gamma = \frac{2y}{d^2},
+\]
+and the angular velocity command is
+\[
+\omega = v_{\text{target}} \cdot \gamma.
+\]
+
+\paragraph{Design Rationale}
+\begin{itemize}
+\item Simpler than Stanley control, as it does not require an explicit heading error term.
+\item More robust to noise in waypoint orientation.
+\item Exhibits natural corner-cutting behavior, which is beneficial for speed optimization.
+\end{itemize}
+
+\paragraph{Limitation}
+Pure Pursuit does not explicitly correct heading error; as a result, the robot may approach the path with a misaligned orientation.
+
+\subsection{Stanley Controller}
+
+\paragraph{Mathematical Foundation}
+Derived from Stanford’s DARPA Grand Challenge entry, the Stanley controller minimizes cross-track error (CTE) and heading error simultaneously:
+\[
+\delta
+=
+\psi_e
++
+\arctan\!\left(
+\frac{k_{cte} \cdot e_{cte}}{1 + v}
+\right).
+\]
+
+The terms are defined as:
+\begin{itemize}
+\item $\psi_e$: Heading error (target heading minus robot heading).
+\item $e_{cte}$: Cross-track error (lateral deviation from the path).
+\item $k_{cte} = 2.0$: Cross-track error gain.
+\item $v$: Current forward velocity.
+\end{itemize}
+
+\paragraph{Implementation}
+The cross-track error is computed as
+\[
+e_{cte}
+=
+y \cos(\theta_{\text{target}})
+-
+x \sin(\theta_{\text{target}}).
+\]
+
+The steering command is then
+\[
+\delta
+=
+\psi_e
++
+\operatorname{atan2}(k_{cte} \cdot e_{cte},\, 1 + v),
+\]
+and the resulting angular velocity command is
+\[
+\omega
+=
+\frac{v \tan(\delta)}{0.2},
+\]
+where $0.2~\mathrm{m}$ is the approximate wheelbase.
+
+\paragraph{Design Rationale}
+\begin{itemize}
+\item Guarantees convergence to the path for bounded initial CTE.
+\item Exhibits natural velocity-dependent damping (higher speed implies weaker correction).
+\item Well-documented and empirically reliable behavior.
+\end{itemize}
+
+\paragraph{Limitation}
+The Stanley controller assumes knowledge of the path tangent; in the current implementation, this tangent is approximated using waypoint orientation.
+
+\subsection{Model Predictive Control (MPC)}
+
+\paragraph{Choice Justification}
+Model Predictive Control was introduced to overcome the limitations of geometric controllers:
+\begin{itemize}
+\item Enables planning over a finite prediction horizon.
+\item Explicitly enforces actuator constraints.
+\item Optimizes the trade-off between tracking accuracy and control smoothness.
+\end{itemize}
+
+\subsubsection{State Augmentation}
+
+The kinematic state is augmented to include actuator dynamics:
+\[
+\mathbf{x}_{\text{aug}} =
+\begin{bmatrix}
+x & y & \theta & v_{\text{act}} & \omega_{\text{act}}
+\end{bmatrix}^{T}.
+\]
+
+\paragraph{Actuator Dynamics}
+First-order actuator dynamics are modeled as
+\[
+\dot{v}_{\text{act}} = \alpha_v (v_{\text{cmd}} - v_{\text{act}}),
+\qquad
+\dot{\omega}_{\text{act}} = \alpha_\omega (\omega_{\text{cmd}} - \omega_{\text{act}}).
+\]
+
+The corresponding time constants are
+\[
+\tau_v = 0.5~\mathrm{s},
+\qquad
+\tau_\omega = 0.2~\mathrm{s},
+\]
+chosen empirically.
+
+\subsubsection{Integration Method Evolution}
+
+\paragraph{Initial Approach (Forward Euler)}
+The initial discretization uses Forward Euler integration:
+\[
+\mathbf{x}_{k+1}
+=
+\mathbf{x}_k
++
+f(\mathbf{x}_k, \mathbf{u}_k)\,dt.
+\]
+
+This approach introduces systematic bias at high angular velocities, causing curved trajectories to degenerate into straight-line chords.
+
+\paragraph{Improved Approach (Exact Arc Integration)}
+For $|\omega| \ge \epsilon$, with $\epsilon = 10^{-4}$, the exact integration of circular motion is used:
+\[
+x_{k+1}
+=
+x_k
++
+\frac{v}{\omega}
+\bigl[\sin(\theta_k + \omega dt) - \sin\theta_k\bigr],
+\]
+\[
+y_{k+1}
+=
+y_k
+-
+\frac{v}{\omega}
+\bigl[\cos(\theta_k + \omega dt) - \cos\theta_k\bigr],
+\]
+\[
+\theta_{k+1}
+=
+\theta_k
++
+\omega dt.
+\]
+
+For $|\omega| < \epsilon$, the straight-line approximation is applied:
+\[
+x_{k+1} = x_k + v \cos\theta_k\,dt,
+\qquad
+y_{k+1} = y_k + v \sin\theta_k\,dt.
+\]
+
+\subsubsection{Cost Function}
+
+The MPC objective function is defined as
+\[
+J
+=
+\sum_{k=1}^{N}
+\Bigl[
+w_d \|\mathbf{p}_k - \mathbf{p}_{\text{target}}\|^2
++
+w_h (\theta_k - \theta_{\text{target}})^2
++
+w_r \|\mathbf{u}_k - \mathbf{u}_{k-1}\|^2
+\Bigr].
+\]
+
+\begin{table}[h]
+\centering
+\caption{MPC cost function weights}
+\label{tab:mpc_weights}
+\begin{tabular}{l c l}
+\toprule
+\textbf{Weight} & \textbf{Value} & \textbf{Purpose} \\
+\midrule
+$w_d$ & 10.0 & Minimize distance to target \\
+$w_h$ & 2.0 & Minimize heading error \\
+$w_r$ & 5.0 & Penalize control rate (smoothness) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The target heading is computed greedily as
+\[
+\theta_{\text{target}}
+=
+\operatorname{atan2}
+(y_{\text{target}} - y,\; x_{\text{target}} - x).
+\]
+
+This formulation directly points toward the target; a path-tangent-based reference would provide improved anticipatory behavior.
+
+\subsubsection{Optimization}
+
+\paragraph{Solver}
+Sequential Least-Squares Quadratic Programming (SLSQP) is used for optimization.
+
+\paragraph{Decision Variables}
+\[
+\mathbf{u}
+=
+[v_0, \omega_0, v_1, \omega_1, \ldots, v_{N-1}, \omega_{N-1}]^{T}.
+\]
+
+\paragraph{Constraints}
+\begin{itemize}
+\item Velocity bounds: $0 \le v_k \le 0.22$.
+\item Angular velocity bounds: $-2.0 \le \omega_k \le 2.0$.
+\item Rate constraints enforced implicitly via a soft penalty in the cost function.
+\end{itemize}
+

@@ -1,0 +1,63 @@
+\section{Limitations and Failure Analysis}
+
+\subsection{Perception Limitations}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Limitations of the perception pipeline}
+\label{tab:perception_limitations}
+\begin{tabular}{p{4cm} p{5cm} p{5cm}}
+\toprule
+\textbf{Limitation} & \textbf{Manifestation} & \textbf{Mitigation} \\
+\midrule
+Binary thresholding &
+Fails under variable lighting conditions &
+Adaptive thresholding (not implemented) \\
+Single seed point &
+May select an incorrect lane at intersections &
+Multi-seed strategy (not implemented) \\
+No marker tracking &
+Re-detection required at every frame &
+Extended Kalman Filter (EKF) state estimation (not implemented) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These limitations indicate that the current perception pipeline is primarily reactive and lacks temporal consistency.
+
+\subsection{Control Limitations}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Limitations of the control subsystem}
+\label{tab:control_limitations}
+\begin{tabular}{p{4cm} p{5cm} p{5cm}}
+\toprule
+\textbf{Limitation} & \textbf{Manifestation} & \textbf{Root Cause} \\
+\midrule
+Single waypoint horizon &
+Poor anticipation of upcoming path curvature &
+Perception module publishes only one waypoint \\
+No state estimation &
+Assumes ideal command execution &
+Odometry feedback not integrated \\
+Soft rate constraints &
+Potential for jerky motion &
+Hard constraints computationally expensive in Python \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These control limitations reduce tracking smoothness and robustness, particularly in high-curvature or dynamically changing scenarios.
+
+\subsection{System-Level Limitations}
+
+Beyond perception and control, several system-level constraints limit overall capability:
+\begin{itemize}
+\item \textbf{Latency}: Python-based MPC optimization may exceed $50~\mathrm{ms}$ in worst-case scenarios.
+\item \textbf{Static UAV assumption}: The system assumes a hovering aerial platform, with no coordinated aerial--ground motion.
+\item \textbf{No obstacle avoidance}: Path-following logic assumes a clear environment without dynamic or static obstacles.
+\end{itemize}
+

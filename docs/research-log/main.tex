@@ -2,34 +2,40 @@
 
 \input{preamble}
 
-\title{Autonomous Path Tracking with MPC}
+\title{\textbf{Vision-Based Path Following with Multi-Controller Architecture}}
 \author{Shlok Mehndiratta}
-\date{\today}
+\date{December 22, 2025}
 \newcommand{\docversion}{v1.0}
 
 \begin{document}
 \maketitle
 
+\vspace{-1em}
 \begin{center}
-\textbf{Document Version: \docversion}
+\small
+\textbf{Repository}: \texttt{ugv\_uav\_control} \\
+\textbf{Platform}: ROS~2 Jazzy, Gazebo Sim (Harmonic), Python~3.12 \\
+\textbf{Document Version}: \docversion
 \end{center}
+
+\vspace{1em}
 
 \input{sections/problem}
 \input{sections/modeling}
 \input{sections/perception}
 \input{sections/control}
-\input{sections/numerics}
 \input{sections/architecture}
+\input{sections/constraint_geometry}
+\input{sections/numerics}
 \input{sections/limitations}
 \input{sections/future}
 
+\clearpage
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
 \appendix
 \input{appendices/symbols}
-\input{appendices/derivations}
-\input{appendices/implementation_notes}
-
-\bibliographystyle{plain}
-\bibliography{references}
+\input{appendices/sensors}
 
 \end{document}
 

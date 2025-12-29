@@ -1,0 +1,39 @@
+\section{Constraint Geometry}
+
+\subsection{Non-Holonomic Constraint}
+
+The mobile base is subject to a non-holonomic motion constraint, meaning it cannot generate lateral velocity. This restriction is captured by the standard unicycle kinematic model:
+\[
+\dot{x} = v \cos\theta,
+\qquad
+\dot{y} = v \sin\theta.
+\]
+
+There is no independent control over $\dot{x}$ and $\dot{y}$; translational motion is constrained to lie strictly along the instantaneous heading direction.
+
+\paragraph{Consequence}
+Path planning and control algorithms must explicitly account for a minimum achievable turning radius. Given a bounded angular velocity, the minimum turning radius is
+\[
+r_{\min}
+=
+\frac{v}{\omega_{\max}}
+=
+\frac{0.22}{2.84}
+\approx 0.077~\mathrm{m}.
+\]
+
+This constraint limits the maximum curvature of feasible trajectories and rules out instantaneous lateral motion.
+
+\subsection{Actuator Constraints}
+
+Actuation limits are imposed by the differential-drive motor model, which enforces saturation on wheel speeds. Control inputs are expressed as linear and angular velocity commands.
+
+\paragraph{Command Structure}
+The accepted command interface consists of:
+\begin{itemize}
+\item \textbf{Linear velocity}: Forward translational speed, subject to motor saturation limits.
+\item \textbf{Angular velocity}: Yaw rate, internally converted into differential wheel velocities.
+\end{itemize}
+
+These actuator constraints bound the feasible control inputs and must be respected by higher-level planners and controllers to ensure physically realizable motion.
+

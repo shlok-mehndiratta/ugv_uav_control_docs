@@ -1,0 +1,56 @@
+\section{Perception Pipeline}
+
+\subsection{Lane Segmentation via Floodfill}
+
+The path extraction pipeline consists of the following stages:
+\begin{itemize}
+\item \textbf{Thresholding}: Binary intensity thresholding at a value of 100.
+\item \textbf{Seed Point Search}: Probing candidate seed points within a radial range of 30--70~px and an angular window of $\pm 0.6~\mathrm{rad}$.
+\item \textbf{Floodfill Propagation}: Connected-component extraction using a floodfill algorithm.
+\item \textbf{Distance Transformation}: Euclidean distance transform
+\(
+\mathcal{D}: I \rightarrow \mathbb{R}^{+}.
+\)
+\end{itemize}
+
+The path centerline is defined as the locus of points maximizing the distance transform:
+\[
+\mathbf{p}^{*}
+=
+\arg\max_{\mathbf{p} \in \mathcal{R}} \mathcal{D}(\mathbf{p}),
+\]
+where $\mathcal{R}$ denotes the set of pixels belonging to the extracted path region.
+
+\subsection{Waypoint Generation}
+
+Waypoints are generated in the robot body frame using a polar-to-Cartesian transformation. Given a target distance $d$ and relative bearing $\alpha$, the waypoint coordinates are
+\[
+x = d \cos\alpha, \qquad
+y = d \sin\alpha.
+\]
+
+The relative bearing is computed as
+\[
+\alpha
+=
+-\left(
+\theta_{\text{target,image}}
+-
+\theta_{\text{robot}}
+\right).
+\]
+
+Expressing the distance explicitly in metric units yields
+\[
+x = d_{\text{meters}} \cos\alpha, \qquad
+y = d_{\text{meters}} \sin\alpha.
+\]
+
+\paragraph{Coordinate Convention}
+All waypoints are expressed in the robot body frame, with the following axis definitions:
+\begin{itemize}
+\item $+x$: Forward (aligned with the robot heading)
+\item $+y$: Left (perpendicular to heading, right-hand rule)
+\item Origin: Robot center
+\end{itemize}
+

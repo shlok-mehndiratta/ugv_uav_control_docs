@@ -1,3 +1,51 @@
 \section{Problem Formulation}
-This section defines the precise control problem and its evolution.
+
+\subsection{Original Problem Statement}
+
+The fundamental problem addressed by this project is vision-based autonomous
+path following for a differential-drive ground robot (TurtleBot3 Burger)
+using an overhead camera perspective.
+
+The system is required to:
+\begin{itemize}
+\item Localize the robot without relying on GPS or SLAM, using fiducial marker detection.
+\item Extract navigable path geometry from camera imagery.
+\item Generate waypoints that guide the robot along the path centerline.
+\item Execute control commands that minimize tracking error while respecting kinematic constraints.
+\end{itemize}
+
+\subsection{Constraint Hierarchy}
+
+\begin{table}[h]
+\centering
+\caption{Constraint hierarchy governing the TurtleBot3 platform}
+\label{tab:constraint_hierarchy}
+\begin{tabular}{lll}
+\toprule
+\textbf{Constraint Type} & \textbf{Mathematical Form} & \textbf{Physical Interpretation} \\
+\midrule
+Non-holonomic &
+$\dot{x}\sin\theta - \dot{y}\cos\theta = 0$ &
+No lateral motion \\
+Velocity bounds &
+$0 \le v \le 0.22$ &
+TurtleBot3 motor limits \\
+Angular rate bounds &
+$|\omega| \le \omega_{\max}$ &
+Actuator limits \\
+Wheel slip &
+Implicit friction model &
+$\mu = 1000$ assumption \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Problem Evolution}
+
+The scope of the problem evolved through the following stages:
+\begin{itemize}
+\item \textbf{Phase 1}: Static overhead camera with direct path following.
+\item \textbf{Phase 2}: UAV-mounted camera for future mobile observation.
+\item \textbf{Phase 3}: Multi-controller architecture with modular selection.
+\end{itemize}
 

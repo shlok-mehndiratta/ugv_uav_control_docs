@@ -1,0 +1,62 @@
+\section{Future Research Directions}
+
+\subsection{Immediate Extensions (Engineering)}
+
+Several near-term engineering extensions can significantly improve system robustness, performance, and deployability.
+
+\begin{itemize}
+\item \textbf{Warm-start optimization}:  
+Initialize the optimizer using a shifted version of the previous solution to improve convergence speed and reduce computational overhead.
+
+\item \textbf{Path spline fitting}:  
+Fit a cubic spline to the extracted path centerline in order to ensure trajectory continuity and smooth curvature profiles.
+
+\item \textbf{Odometry integration}:  
+Fuse wheel odometry with visual marker-based localization to obtain more robust and drift-resistant state estimation.
+\end{itemize}
+
+\subsection{Theoretical Directions}
+
+Beyond implementation improvements, several control-theoretic extensions can provide stronger analytical guarantees and cleaner problem formulations.
+
+\begin{itemize}
+\item \textbf{Frenet-frame MPC}:  
+Reformulate the optimization problem in path-relative (Frenet) coordinates, enabling more interpretable cost terms and explicit separation of longitudinal and lateral errors.
+
+\item \textbf{Terminal cost}:  
+Introduce a terminal penalty $\phi(\mathbf{x}_N)$ to improve closed-loop stability and convergence guarantees.
+
+\item \textbf{Explicit MPC}:  
+Pre-compute the control law offline to enable deterministic real-time execution with bounded computational complexity.
+\end{itemize}
+
+\subsection{Learning-Based Extensions}
+
+Learning-based approaches offer the potential to augment or partially replace model-based components in complex environments.
+
+\begin{itemize}
+\item \textbf{Cost function learning}:  
+Apply inverse reinforcement learning to infer MPC cost weights from expert demonstrations.
+
+\item \textbf{Path extraction}:  
+Employ semantic segmentation networks to enable robust path perception in visually complex or unstructured environments.
+
+\item \textbf{End-to-end control}:  
+Use imitation learning to directly map sensory observations to control commands, bypassing explicit path extraction and geometric modeling.
+\end{itemize}
+
+\subsection{Multi-Agent Coordination}
+
+Extending the framework to cooperative multi-agent scenarios opens several additional research directions.
+
+\begin{itemize}
+\item \textbf{UAV--UGV cooperative planning}:  
+Leverage aerial sensing to provide long-horizon look-ahead information for ground vehicle navigation.
+
+\item \textbf{Dynamic path modification}:  
+Allow the aerial agent to modify visual cues or markers in real time to influence ground navigation behavior.
+
+\item \textbf{Distributed MPC}:  
+Perform coordinated trajectory optimization across multiple agents while respecting individual dynamics and communication constraints.
+\end{itemize}
+
