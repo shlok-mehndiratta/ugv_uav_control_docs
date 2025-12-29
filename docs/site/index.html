@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Shlok Mehndiratta" />
+  <meta name="dcterms.date" content="2025-12-22" />
+  <title>Vision-Based Path Following with Multi-Controller Architecture</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title"><strong>Vision-Based Path Following with
+Multi-Controller Architecture</strong></h1>
+<p class="author">Shlok Mehndiratta</p>
+<p class="date">December 22, 2025</p>
+</header>
+<div class="center">
+<p><strong>Repository</strong>: <code>ugv_uav_control</code><br />
+<strong>Platform</strong>: ROS 2 Jazzy, Gazebo Sim (Harmonic),
+Python 3.12<br />
+<strong>Document Version</strong>: v1.0</p>
+</div>
+<h1 id="problem-formulation">Problem Formulation</h1>
+<h2 id="original-problem-statement">Original Problem Statement</h2>
+<p>The fundamental problem addressed by this project is vision-based
+autonomous path following for a differential-drive ground robot
+(TurtleBot3 Burger) using an overhead camera perspective.</p>
+<p>The system is required to:</p>
+<ul>
+<li><p>Localize the robot without relying on GPS or SLAM, using fiducial
+marker detection.</p></li>
+<li><p>Extract navigable path geometry from camera imagery.</p></li>
+<li><p>Generate waypoints that guide the robot along the path
+centerline.</p></li>
+<li><p>Execute control commands that minimize tracking error while
+respecting kinematic constraints.</p></li>
+</ul>
+<h2 id="constraint-hierarchy">Constraint Hierarchy</h2>
+<div id="tab:constraint_hierarchy">
+<table>
+<caption>Constraint hierarchy governing the TurtleBot3
+platform</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Constraint Type</strong></th>
+<th style="text-align: left;"><strong>Mathematical Form</strong></th>
+<th style="text-align: left;"><strong>Physical
+Interpretation</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Non-holonomic</td>
+<td style="text-align: left;"><span
+class="math inline">\(\dot{x}\sin\theta - \dot{y}\cos\theta =
+0\)</span></td>
+<td style="text-align: left;">No lateral motion</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Velocity bounds</td>
+<td style="text-align: left;"><span class="math inline">\(0 \le v \le
+0.22\)</span></td>
+<td style="text-align: left;">TurtleBot3 motor limits</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Angular rate bounds</td>
+<td style="text-align: left;"><span class="math inline">\(|\omega| \le
+\omega_{\max}\)</span></td>
+<td style="text-align: left;">Actuator limits</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Wheel slip</td>
+<td style="text-align: left;">Implicit friction model</td>
+<td style="text-align: left;"><span class="math inline">\(\mu =
+1000\)</span> assumption</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="problem-evolution">Problem Evolution</h2>
+<p>The scope of the problem evolved through the following stages:</p>
+<ul>
+<li><p><strong>Phase 1</strong>: Static overhead camera with direct path
+following.</p></li>
+<li><p><strong>Phase 2</strong>: UAV-mounted camera for future mobile
+observation.</p></li>
+<li><p><strong>Phase 3</strong>: Multi-controller architecture with
+modular selection.</p></li>
+</ul>
+<h1 id="modeling-assumptions">Modeling Assumptions</h1>
+<h2 id="robot-kinematic-model">Robot Kinematic Model</h2>
+<p>The TurtleBot3 Burger is modeled as a planar unicycle system with
+state <span class="math display">\[\mathbf{x} =
+\begin{bmatrix}
+x &amp; y &amp; \theta
+\end{bmatrix}^{T}
+\in \mathbb{R}^2 \times S^1,\]</span> where <span
+class="math inline">\((x,y)\)</span> denotes the robot position in the
+world frame and <span class="math inline">\(\theta\)</span> is the
+heading (yaw) angle.</p>
+<h4 id="robot-parameters">Robot Parameters</h4>
+<p>The physical parameters used in the model are:</p>
+<ul>
+<li><p>Wheel separation: <span class="math inline">\(L =
+0.160~\mathrm{m}\)</span></p></li>
+<li><p>Wheel radius: <span class="math inline">\(r =
+0.033~\mathrm{m}\)</span></p></li>
+<li><p>Mass: <span class="math inline">\(m =
+0.825~\mathrm{kg}\)</span></p></li>
+<li><p>Maximum linear acceleration: <span class="math inline">\(a_{\max}
+= 1.0~\mathrm{m/s^2}\)</span></p></li>
+</ul>
+<h4 id="differential-drive-to-unicycle-mapping">Differential-Drive to
+Unicycle Mapping</h4>
+<p>The relationship between differential wheel velocities and unicycle
+control inputs is given by <span class="math display">\[v =
+\frac{r(\omega_R + \omega_L)}{2}, \qquad
+\omega = \frac{r(\omega_R - \omega_L)}{L},\]</span> where <span
+class="math inline">\(\omega_R\)</span> and <span
+class="math inline">\(\omega_L\)</span> denote the angular velocities of
+the right and left wheels, respectively.</p>
+<h2 id="camera-model">Camera Model</h2>
+<p>The overhead camera is modeled using an ideal pinhole projection
+model. The assumed camera parameters are:</p>
+<ul>
+<li><p>Horizontal field of view: <span class="math inline">\(\phi =
+1.047~\mathrm{rad}\)</span> (<span
+class="math inline">\(60^\circ\)</span>)</p></li>
+<li><p>Camera height above the ground plane: <span
+class="math inline">\(h = 10.0~\mathrm{m}\)</span></p></li>
+<li><p>Image resolution: <span class="math inline">\(1920 \times
+1080~\mathrm{px}\)</span></p></li>
+</ul>
+<h4 id="world-to-image-scaling">World-to-Image Scaling</h4>
+<p>The physical width of the observable ground region is <span
+class="math display">\[w_{\text{world}} = 2h
+\tan\!\left(\frac{\phi}{2}\right).\]</span></p>
+<p>Using the image width <span
+class="math inline">\(w_{\text{image}}\)</span>, the pixel-to-meter
+conversion factor is <span class="math display">\[s =
+\frac{w_{\text{world}}}{w_{\text{image}}}
+\approx 0.00601~\mathrm{m/px}.\]</span></p>
+<h4 id="critical-assumption">Critical Assumption</h4>
+<p>The camera optical axis is assumed to be perfectly vertical. Any
+deviation from this alignment introduces perspective and radial
+distortions, which are not corrected in the current implementation.</p>
+<h2 id="aruco-marker-localization">ArUco Marker Localization</h2>
+<p>Robot pose estimation is performed using an ArUco fiducial marker
+(ID 55, DICT_6X6_250). The marker is mounted <span
+class="math inline">\(0.2~\mathrm{m}\)</span> above the robot base on a
+<span class="math inline">\(0.5~\mathrm{m} \times
+0.5~\mathrm{m}\)</span> planar plate.</p>
+<ul>
+<li><p><strong>Heading Estimation</strong>: The robot heading is
+estimated from the orientation of the detected marker as <span
+class="math display">\[\theta_{\text{robot}} =
+\operatorname{atan2}
+\bigl(y_{\text{top}} - y_{\text{center}},\;
+      x_{\text{top}} - x_{\text{center}}\bigr),\]</span> where <span
+class="math inline">\((x_{\text{top}}, y_{\text{top}})\)</span> denotes
+the midpoint of the marker’s top edge and <span
+class="math inline">\((x_{\text{center}}, y_{\text{center}})\)</span> is
+the marker center.</p></li>
+<li><p><strong>Limitation</strong>: Heading estimation accuracy degrades
+as the marker moves farther from the camera center due to perspective
+distortion. No geometric correction or compensation is applied.</p></li>
+</ul>
+<h1 id="perception-pipeline">Perception Pipeline</h1>
+<h2 id="lane-segmentation-via-floodfill">Lane Segmentation via
+Floodfill</h2>
+<p>The path extraction pipeline consists of the following stages:</p>
+<ul>
+<li><p><strong>Thresholding</strong>: Binary intensity thresholding at a
+value of 100.</p></li>
+<li><p><strong>Seed Point Search</strong>: Probing candidate seed points
+within a radial range of 30–70 px and an angular window of <span
+class="math inline">\(\pm 0.6~\mathrm{rad}\)</span>.</p></li>
+<li><p><strong>Floodfill Propagation</strong>: Connected-component
+extraction using a floodfill algorithm.</p></li>
+<li><p><strong>Distance Transformation</strong>: Euclidean distance
+transform <span class="math inline">\(\mathcal{D}: I \rightarrow
+\mathbb{R}^{+}.\)</span></p></li>
+</ul>
+<p>The path centerline is defined as the locus of points maximizing the
+distance transform: <span class="math display">\[\mathbf{p}^{*}
+=
+\arg\max_{\mathbf{p} \in \mathcal{R}} \mathcal{D}(\mathbf{p}),\]</span>
+where <span class="math inline">\(\mathcal{R}\)</span> denotes the set
+of pixels belonging to the extracted path region.</p>
+<h2 id="waypoint-generation">Waypoint Generation</h2>
+<p>Waypoints are generated in the robot body frame using a
+polar-to-Cartesian transformation. Given a target distance <span
+class="math inline">\(d\)</span> and relative bearing <span
+class="math inline">\(\alpha\)</span>, the waypoint coordinates are
+<span class="math display">\[x = d \cos\alpha, \qquad
+y = d \sin\alpha.\]</span></p>
+<p>The relative bearing is computed as <span
+class="math display">\[\alpha
+=
+-\left(
+\theta_{\text{target,image}}
+-
+\theta_{\text{robot}}
+\right).\]</span></p>
+<p>Expressing the distance explicitly in metric units yields <span
+class="math display">\[x = d_{\text{meters}} \cos\alpha, \qquad
+y = d_{\text{meters}} \sin\alpha.\]</span></p>
+<h4 id="coordinate-convention">Coordinate Convention</h4>
+<p>All waypoints are expressed in the robot body frame, with the
+following axis definitions:</p>
+<ul>
+<li><p><span class="math inline">\(+x\)</span>: Forward (aligned with
+the robot heading)</p></li>
+<li><p><span class="math inline">\(+y\)</span>: Left (perpendicular to
+heading, right-hand rule)</p></li>
+<li><p>Origin: Robot center</p></li>
+</ul>
+<h1 id="control-strategy-evolution">Control Strategy Evolution</h1>
+<h2 id="pure-pursuit-controller">Pure Pursuit Controller</h2>
+<h4 id="mathematical-foundation">Mathematical Foundation</h4>
+<p>Pure Pursuit is a geometric path-following controller that computes a
+circular arc connecting the robot to a look-ahead waypoint.</p>
+<p>The curvature of the arc is given by <span
+class="math display">\[\gamma = \frac{2y}{L_d^2},
+\qquad
+L_d = \sqrt{x^2 + y^2},\]</span> where <span
+class="math inline">\(L_d\)</span> is the Euclidean distance to the
+waypoint and <span class="math inline">\(y\)</span> is the lateral
+offset in the robot frame.</p>
+<p>The commanded angular velocity is <span class="math display">\[\omega
+= v \cdot \gamma.\]</span></p>
+<h4 id="implementation">Implementation</h4>
+<p>In the implemented formulation, the curvature is computed as <span
+class="math display">\[\gamma = \frac{2y}{d^2},\]</span> and the angular
+velocity command is <span class="math display">\[\omega =
+v_{\text{target}} \cdot \gamma.\]</span></p>
+<h4 id="design-rationale">Design Rationale</h4>
+<ul>
+<li><p>Simpler than Stanley control, as it does not require an explicit
+heading error term.</p></li>
+<li><p>More robust to noise in waypoint orientation.</p></li>
+<li><p>Exhibits natural corner-cutting behavior, which is beneficial for
+speed optimization.</p></li>
+</ul>
+<h4 id="limitation">Limitation</h4>
+<p>Pure Pursuit does not explicitly correct heading error; as a result,
+the robot may approach the path with a misaligned orientation.</p>
+<h2 id="stanley-controller">Stanley Controller</h2>
+<h4 id="mathematical-foundation-1">Mathematical Foundation</h4>
+<p>Derived from Stanford’s DARPA Grand Challenge entry, the Stanley
+controller minimizes cross-track error (CTE) and heading error
+simultaneously: <span class="math display">\[\delta
+=
+\psi_e
++
+\arctan\!\left(
+\frac{k_{cte} \cdot e_{cte}}{1 + v}
+\right).\]</span></p>
+<p>The terms are defined as:</p>
+<ul>
+<li><p><span class="math inline">\(\psi_e\)</span>: Heading error
+(target heading minus robot heading).</p></li>
+<li><p><span class="math inline">\(e_{cte}\)</span>: Cross-track error
+(lateral deviation from the path).</p></li>
+<li><p><span class="math inline">\(k_{cte} = 2.0\)</span>: Cross-track
+error gain.</p></li>
+<li><p><span class="math inline">\(v\)</span>: Current forward
+velocity.</p></li>
+</ul>
+<h4 id="implementation-1">Implementation</h4>
+<p>The cross-track error is computed as <span
+class="math display">\[e_{cte}
+=
+y \cos(\theta_{\text{target}})
+-
+x \sin(\theta_{\text{target}}).\]</span></p>
+<p>The steering command is then <span class="math display">\[\delta
+=
+\psi_e
++
+\operatorname{atan2}(k_{cte} \cdot e_{cte},\, 1 + v),\]</span> and the
+resulting angular velocity command is <span
+class="math display">\[\omega
+=
+\frac{v \tan(\delta)}{0.2},\]</span> where <span
+class="math inline">\(0.2~\mathrm{m}\)</span> is the approximate
+wheelbase.</p>
+<h4 id="design-rationale-1">Design Rationale</h4>
+<ul>
+<li><p>Guarantees convergence to the path for bounded initial
+CTE.</p></li>
+<li><p>Exhibits natural velocity-dependent damping (higher speed implies
+weaker correction).</p></li>
+<li><p>Well-documented and empirically reliable behavior.</p></li>
+</ul>
+<h4 id="limitation-1">Limitation</h4>
+<p>The Stanley controller assumes knowledge of the path tangent; in the
+current implementation, this tangent is approximated using waypoint
+orientation.</p>
+<h2 id="model-predictive-control-mpc">Model Predictive Control
+(MPC)</h2>
+<h4 id="choice-justification">Choice Justification</h4>
+<p>Model Predictive Control was introduced to overcome the limitations
+of geometric controllers:</p>
+<ul>
+<li><p>Enables planning over a finite prediction horizon.</p></li>
+<li><p>Explicitly enforces actuator constraints.</p></li>
+<li><p>Optimizes the trade-off between tracking accuracy and control
+smoothness.</p></li>
+</ul>
+<h3 id="state-augmentation">State Augmentation</h3>
+<p>The kinematic state is augmented to include actuator dynamics: <span
+class="math display">\[\mathbf{x}_{\text{aug}} =
+\begin{bmatrix}
+x &amp; y &amp; \theta &amp; v_{\text{act}} &amp; \omega_{\text{act}}
+\end{bmatrix}^{T}.\]</span></p>
+<h4 id="actuator-dynamics">Actuator Dynamics</h4>
+<p>First-order actuator dynamics are modeled as <span
+class="math display">\[\dot{v}_{\text{act}} = \alpha_v (v_{\text{cmd}} -
+v_{\text{act}}),
+\qquad
+\dot{\omega}_{\text{act}} = \alpha_\omega (\omega_{\text{cmd}} -
+\omega_{\text{act}}).\]</span></p>
+<p>The corresponding time constants are <span
+class="math display">\[\tau_v = 0.5~\mathrm{s},
+\qquad
+\tau_\omega = 0.2~\mathrm{s},\]</span> chosen empirically.</p>
+<h3 id="integration-method-evolution">Integration Method Evolution</h3>
+<h4 id="initial-approach-forward-euler">Initial Approach (Forward
+Euler)</h4>
+<p>The initial discretization uses Forward Euler integration: <span
+class="math display">\[\mathbf{x}_{k+1}
+=
+\mathbf{x}_k
++
+f(\mathbf{x}_k, \mathbf{u}_k)\,dt.\]</span></p>
+<p>This approach introduces systematic bias at high angular velocities,
+causing curved trajectories to degenerate into straight-line chords.</p>
+<h4 id="improved-approach-exact-arc-integration">Improved Approach
+(Exact Arc Integration)</h4>
+<p>For <span class="math inline">\(|\omega| \ge \epsilon\)</span>, with
+<span class="math inline">\(\epsilon = 10^{-4}\)</span>, the exact
+integration of circular motion is used: <span
+class="math display">\[x_{k+1}
+=
+x_k
++
+\frac{v}{\omega}
+\bigl[\sin(\theta_k + \omega dt) - \sin\theta_k\bigr],\]</span> <span
+class="math display">\[y_{k+1}
+=
+y_k
+-
+\frac{v}{\omega}
+\bigl[\cos(\theta_k + \omega dt) - \cos\theta_k\bigr],\]</span> <span
+class="math display">\[\theta_{k+1}
+=
+\theta_k
++
+\omega dt.\]</span></p>
+<p>For <span class="math inline">\(|\omega| &lt; \epsilon\)</span>, the
+straight-line approximation is applied: <span
+class="math display">\[x_{k+1} = x_k + v \cos\theta_k\,dt,
+\qquad
+y_{k+1} = y_k + v \sin\theta_k\,dt.\]</span></p>
+<h3 id="cost-function">Cost Function</h3>
+<p>The MPC objective function is defined as <span
+class="math display">\[J
+=
+\sum_{k=1}^{N}
+\Bigl[
+w_d \|\mathbf{p}_k - \mathbf{p}_{\text{target}}\|^2
++
+w_h (\theta_k - \theta_{\text{target}})^2
++
+w_r \|\mathbf{u}_k - \mathbf{u}_{k-1}\|^2
+\Bigr].\]</span></p>
+<div id="tab:mpc_weights">
+<table>
+<caption>MPC cost function weights</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Weight</strong></th>
+<th style="text-align: center;"><strong>Value</strong></th>
+<th style="text-align: left;"><strong>Purpose</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><span
+class="math inline">\(w_d\)</span></td>
+<td style="text-align: center;">10.0</td>
+<td style="text-align: left;">Minimize distance to target</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><span
+class="math inline">\(w_h\)</span></td>
+<td style="text-align: center;">2.0</td>
+<td style="text-align: left;">Minimize heading error</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><span
+class="math inline">\(w_r\)</span></td>
+<td style="text-align: center;">5.0</td>
+<td style="text-align: left;">Penalize control rate (smoothness)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The target heading is computed greedily as <span
+class="math display">\[\theta_{\text{target}}
+=
+\operatorname{atan2}
+(y_{\text{target}} - y,\; x_{\text{target}} - x).\]</span></p>
+<p>This formulation directly points toward the target; a
+path-tangent-based reference would provide improved anticipatory
+behavior.</p>
+<h3 id="optimization">Optimization</h3>
+<h4 id="solver">Solver</h4>
+<p>Sequential Least-Squares Quadratic Programming (SLSQP) is used for
+optimization.</p>
+<h4 id="decision-variables">Decision Variables</h4>
+<p><span class="math display">\[\mathbf{u}
+=
+[v_0, \omega_0, v_1, \omega_1, \ldots, v_{N-1},
+\omega_{N-1}]^{T}.\]</span></p>
+<h4 id="constraints">Constraints</h4>
+<ul>
+<li><p>Velocity bounds: <span class="math inline">\(0 \le v_k \le
+0.22\)</span>.</p></li>
+<li><p>Angular velocity bounds: <span class="math inline">\(-2.0 \le
+\omega_k \le 2.0\)</span>.</p></li>
+<li><p>Rate constraints enforced implicitly via a soft penalty in the
+cost function.</p></li>
+</ul>
+<h1 id="implementation-architecture">Implementation Architecture</h1>
+<h2 id="ros-2-node-graph">ROS 2 Node Graph</h2>
+<p>The system is organized as a modular ROS 2 computation graph
+integrating simulation, perception, planning, and control. The
+architecture follows a layered design that clearly separates
+responsibilities while maintaining deterministic data flow.</p>
+<h3 class="unnumbered" id="simulation-layer">Simulation Layer</h3>
+<p>The simulation layer provides the physical and sensory
+environment:</p>
+<ul>
+<li><p>Ground robot exposing a velocity command interface.</p></li>
+<li><p>Aerial platform supplying an overhead visual
+perspective.</p></li>
+<li><p>Ground plane environment used for path visualization.</p></li>
+</ul>
+<h3 class="unnumbered" id="middleware-bridge">Middleware Bridge</h3>
+<p>A middleware bridge connects the simulator to the ROS 2
+ecosystem:</p>
+<ul>
+<li><p>Translates simulator-specific messages into ROS 2-compatible
+formats.</p></li>
+<li><p>Converts velocity commands into stamped messages.</p></li>
+<li><p>Forwards aerial camera data to downstream perception
+nodes.</p></li>
+</ul>
+<h3 class="unnumbered" id="perception-and-planning">Perception and
+Planning</h3>
+<p>This layer extracts navigational intent from sensor data:</p>
+<ul>
+<li><p>Overhead image processing extracts path geometry.</p></li>
+<li><p>Waypoints are generated and published for downstream
+control.</p></li>
+</ul>
+<h3 class="unnumbered" id="control-layer">Control Layer</h3>
+<p>The control layer executes motion commands based on waypoint
+input:</p>
+<ul>
+<li><p>Multiple interchangeable controllers (Stanley, Pure Pursuit,
+MPC).</p></li>
+<li><p>Consumes waypoint messages and outputs velocity
+commands.</p></li>
+<li><p>Commands are routed back to the simulator through the middleware
+bridge.</p></li>
+</ul>
+<p>This layered organization enforces separation of concerns while
+maintaining a clear and deterministic flow of information.</p>
+<h2 id="message-type-design-decision">Message Type Design Decision</h2>
+<h4 id="issue-encountered">Issue Encountered</h4>
+<p>A mismatch was observed between the velocity command message type
+expected by the simulation bridge and the type originally published by
+the controllers.</p>
+<h4 id="resolution">Resolution</h4>
+<p>All controller outputs were standardized to publish stamped velocity
+messages, including both a timestamp and a reference frame
+identifier.</p>
+<h4 id="rationale">Rationale</h4>
+<p>The use of stamped messages provides several advantages:</p>
+<ul>
+<li><p>Enables future latency compensation and time-aligned
+control.</p></li>
+<li><p>Supports reliable data association for logging and
+debugging.</p></li>
+<li><p>Ensures compliance with recommended ROS 2 communication
+practices.</p></li>
+</ul>
+<p>This design choice improves robustness and extensibility without
+increasing controller complexity.</p>
+<h2 id="launch-system-architecture">Launch System Architecture</h2>
+<p>The system launch configuration is designed to maximize flexibility
+and runtime configurability. Its primary responsibilities include:</p>
+<ul>
+<li><p><strong>Dynamic Model Loading</strong>: Simulation models are
+loaded at runtime, programmatically modified to substitute visual
+elements (e.g., track textures), and instantiated into the
+environment.</p></li>
+<li><p><strong>Controller Selection</strong>: The active control
+strategy is selected via a runtime argument, enabling seamless switching
+between Stanley, Pure Pursuit, and MPC without code
+modification.</p></li>
+<li><p><strong>Environment Configuration</strong>: Simulation resource
+paths are extended at launch time to ensure that custom models and
+assets are discoverable by the simulator.</p></li>
+</ul>
+<p>This launch architecture decouples configuration from implementation,
+enabling rapid experimentation and reproducibility.</p>
+<h1 id="constraint-geometry">Constraint Geometry</h1>
+<h2 id="non-holonomic-constraint">Non-Holonomic Constraint</h2>
+<p>The mobile base is subject to a non-holonomic motion constraint,
+meaning it cannot generate lateral velocity. This restriction is
+captured by the standard unicycle kinematic model: <span
+class="math display">\[\dot{x} = v \cos\theta,
+\qquad
+\dot{y} = v \sin\theta.\]</span></p>
+<p>There is no independent control over <span
+class="math inline">\(\dot{x}\)</span> and <span
+class="math inline">\(\dot{y}\)</span>; translational motion is
+constrained to lie strictly along the instantaneous heading
+direction.</p>
+<h4 id="consequence">Consequence</h4>
+<p>Path planning and control algorithms must explicitly account for a
+minimum achievable turning radius. Given a bounded angular velocity, the
+minimum turning radius is <span class="math display">\[r_{\min}
+=
+\frac{v}{\omega_{\max}}
+=
+\frac{0.22}{2.84}
+\approx 0.077~\mathrm{m}.\]</span></p>
+<p>This constraint limits the maximum curvature of feasible trajectories
+and rules out instantaneous lateral motion.</p>
+<h2 id="actuator-constraints">Actuator Constraints</h2>
+<p>Actuation limits are imposed by the differential-drive motor model,
+which enforces saturation on wheel speeds. Control inputs are expressed
+as linear and angular velocity commands.</p>
+<h4 id="command-structure">Command Structure</h4>
+<p>The accepted command interface consists of:</p>
+<ul>
+<li><p><strong>Linear velocity</strong>: Forward translational speed,
+subject to motor saturation limits.</p></li>
+<li><p><strong>Angular velocity</strong>: Yaw rate, internally converted
+into differential wheel velocities.</p></li>
+</ul>
+<p>These actuator constraints bound the feasible control inputs and must
+be respected by higher-level planners and controllers to ensure
+physically realizable motion.</p>
+<h1 id="numerical-methods-analysis">Numerical Methods Analysis</h1>
+<h2 id="discretization-error">Discretization Error</h2>
+<p>Forward Euler integration exhibits a local truncation error of order
+<span class="math inline">\(O(dt^2)\)</span> per integration step, which
+accumulates to a global error of order <span
+class="math inline">\(O(dt)\)</span> over a finite prediction
+horizon.</p>
+<p>For a sampling period of <span class="math inline">\(dt =
+0.2~\mathrm{s}\)</span> and a prediction horizon of <span
+class="math inline">\(N = 5\)</span>, the following observations
+apply:</p>
+<ul>
+<li><p>The maximum trajectory drift over the horizon becomes significant
+for high-curvature paths.</p></li>
+<li><p>Exact arc integration eliminates this discretization error for
+motion segments with constant <span class="math inline">\((v,
+\omega)\)</span>.</p></li>
+</ul>
+<h2 id="optimization-convergence">Optimization Convergence</h2>
+<p>The Sequential Least-Squares Quadratic Programming (SLSQP) algorithm
+does not guarantee convergence for non-convex optimization problems. In
+this implementation, the cost function is non-convex due to:</p>
+<ul>
+<li><p>Trigonometric terms appearing in the state propagation
+equations.</p></li>
+<li><p>Angle wrapping effects in the heading error formulation.</p></li>
+</ul>
+<h4 id="mitigation-strategy">Mitigation Strategy</h4>
+<p>Convergence robustness is improved by initializing the optimizer
+using the solution from the previous control step. Additionally, the
+maximum number of solver iterations is capped at <span
+class="math inline">\(20\)</span> to bound computation time.</p>
+<h2 id="numerical-stability">Numerical Stability</h2>
+<p>The exact arc integration formulation contains the term <span
+class="math inline">\(\tfrac{v}{\omega}\)</span>, which becomes
+ill-conditioned as <span class="math inline">\(\omega \rightarrow
+0\)</span>.</p>
+<h4 id="stability-handling">Stability Handling</h4>
+<p>To maintain numerical stability, the integration scheme switches to a
+straight-line approximation when <span class="math display">\[|\omega|
+&lt; 10^{-4}.\]</span></p>
+<p>This conditional handling prevents numerical singularities while
+preserving accuracy in the low-curvature limit.</p>
+<h1 id="limitations-and-failure-analysis">Limitations and Failure
+Analysis</h1>
+<h2 id="perception-limitations">Perception Limitations</h2>
+<div id="tab:perception_limitations">
+<table>
+<caption>Limitations of the perception pipeline</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Limitation</strong></th>
+<th style="text-align: left;"><strong>Manifestation</strong></th>
+<th style="text-align: left;"><strong>Mitigation</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Binary thresholding</td>
+<td style="text-align: left;">Fails under variable lighting
+conditions</td>
+<td style="text-align: left;">Adaptive thresholding (not
+implemented)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Single seed point</td>
+<td style="text-align: left;">May select an incorrect lane at
+intersections</td>
+<td style="text-align: left;">Multi-seed strategy (not implemented)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">No marker tracking</td>
+<td style="text-align: left;">Re-detection required at every frame</td>
+<td style="text-align: left;">Extended Kalman Filter (EKF) state
+estimation (not implemented)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>These limitations indicate that the current perception pipeline is
+primarily reactive and lacks temporal consistency.</p>
+<h2 id="control-limitations">Control Limitations</h2>
+<div id="tab:control_limitations">
+<table>
+<caption>Limitations of the control subsystem</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Limitation</strong></th>
+<th style="text-align: left;"><strong>Manifestation</strong></th>
+<th style="text-align: left;"><strong>Root Cause</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Single waypoint horizon</td>
+<td style="text-align: left;">Poor anticipation of upcoming path
+curvature</td>
+<td style="text-align: left;">Perception module publishes only one
+waypoint</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">No state estimation</td>
+<td style="text-align: left;">Assumes ideal command execution</td>
+<td style="text-align: left;">Odometry feedback not integrated</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Soft rate constraints</td>
+<td style="text-align: left;">Potential for jerky motion</td>
+<td style="text-align: left;">Hard constraints computationally expensive
+in Python</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>These control limitations reduce tracking smoothness and robustness,
+particularly in high-curvature or dynamically changing scenarios.</p>
+<h2 id="system-level-limitations">System-Level Limitations</h2>
+<p>Beyond perception and control, several system-level constraints limit
+overall capability:</p>
+<ul>
+<li><p><strong>Latency</strong>: Python-based MPC optimization may
+exceed <span class="math inline">\(50~\mathrm{ms}\)</span> in worst-case
+scenarios.</p></li>
+<li><p><strong>Static UAV assumption</strong>: The system assumes a
+hovering aerial platform, with no coordinated aerial–ground
+motion.</p></li>
+<li><p><strong>No obstacle avoidance</strong>: Path-following logic
+assumes a clear environment without dynamic or static
+obstacles.</p></li>
+</ul>
+<h1 id="future-research-directions">Future Research Directions</h1>
+<h2 id="immediate-extensions-engineering">Immediate Extensions
+(Engineering)</h2>
+<p>Several near-term engineering extensions can significantly improve
+system robustness, performance, and deployability.</p>
+<ul>
+<li><p><strong>Warm-start optimization</strong>: Initialize the
+optimizer using a shifted version of the previous solution to improve
+convergence speed and reduce computational overhead.</p></li>
+<li><p><strong>Path spline fitting</strong>: Fit a cubic spline to the
+extracted path centerline in order to ensure trajectory continuity and
+smooth curvature profiles.</p></li>
+<li><p><strong>Odometry integration</strong>: Fuse wheel odometry with
+visual marker-based localization to obtain more robust and
+drift-resistant state estimation.</p></li>
+</ul>
+<h2 id="theoretical-directions">Theoretical Directions</h2>
+<p>Beyond implementation improvements, several control-theoretic
+extensions can provide stronger analytical guarantees and cleaner
+problem formulations.</p>
+<ul>
+<li><p><strong>Frenet-frame MPC</strong>: Reformulate the optimization
+problem in path-relative (Frenet) coordinates, enabling more
+interpretable cost terms and explicit separation of longitudinal and
+lateral errors.</p></li>
+<li><p><strong>Terminal cost</strong>: Introduce a terminal penalty
+<span class="math inline">\(\phi(\mathbf{x}_N)\)</span> to improve
+closed-loop stability and convergence guarantees.</p></li>
+<li><p><strong>Explicit MPC</strong>: Pre-compute the control law
+offline to enable deterministic real-time execution with bounded
+computational complexity.</p></li>
+</ul>
+<h2 id="learning-based-extensions">Learning-Based Extensions</h2>
+<p>Learning-based approaches offer the potential to augment or partially
+replace model-based components in complex environments.</p>
+<ul>
+<li><p><strong>Cost function learning</strong>: Apply inverse
+reinforcement learning to infer MPC cost weights from expert
+demonstrations.</p></li>
+<li><p><strong>Path extraction</strong>: Employ semantic segmentation
+networks to enable robust path perception in visually complex or
+unstructured environments.</p></li>
+<li><p><strong>End-to-end control</strong>: Use imitation learning to
+directly map sensory observations to control commands, bypassing
+explicit path extraction and geometric modeling.</p></li>
+</ul>
+<h2 id="multi-agent-coordination">Multi-Agent Coordination</h2>
+<p>Extending the framework to cooperative multi-agent scenarios opens
+several additional research directions.</p>
+<ul>
+<li><p><strong>UAV–UGV cooperative planning</strong>: Leverage aerial
+sensing to provide long-horizon look-ahead information for ground
+vehicle navigation.</p></li>
+<li><p><strong>Dynamic path modification</strong>: Allow the aerial
+agent to modify visual cues or markers in real time to influence ground
+navigation behavior.</p></li>
+<li><p><strong>Distributed MPC</strong>: Perform coordinated trajectory
+optimization across multiple agents while respecting individual dynamics
+and communication constraints.</p></li>
+</ul>
+<h1 class="unnumbered" id="appendices">Appendices</h1>
+<h1 id="symbol-definitions">Symbol Definitions</h1>
+<div class="center">
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;"><strong>Symbol</strong></th>
+<th style="text-align: left;"><strong>Definition</strong></th>
+<th style="text-align: center;"><strong>Units</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\(x,
+y\)</span></td>
+<td style="text-align: left;">World-frame position</td>
+<td style="text-align: center;">m</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span
+class="math inline">\(\theta\)</span></td>
+<td style="text-align: left;">Heading (yaw angle)</td>
+<td style="text-align: center;">rad</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span
+class="math inline">\(v\)</span></td>
+<td style="text-align: left;">Linear velocity</td>
+<td style="text-align: center;">m/s</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span
+class="math inline">\(\omega\)</span></td>
+<td style="text-align: left;">Angular velocity</td>
+<td style="text-align: center;">rad/s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span
+class="math inline">\(\delta\)</span></td>
+<td style="text-align: left;">Steering angle (Stanley controller
+output)</td>
+<td style="text-align: center;">rad</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span
+class="math inline">\(\gamma\)</span></td>
+<td style="text-align: left;">Path curvature</td>
+<td style="text-align: center;">1/m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span
+class="math inline">\(e_{cte}\)</span></td>
+<td style="text-align: left;">Cross-track error</td>
+<td style="text-align: center;">m</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span
+class="math inline">\(\psi_e\)</span></td>
+<td style="text-align: left;">Heading error</td>
+<td style="text-align: center;">rad</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span
+class="math inline">\(L\)</span></td>
+<td style="text-align: left;">Wheel separation</td>
+<td style="text-align: center;">m</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span
+class="math inline">\(r\)</span></td>
+<td style="text-align: left;">Wheel radius</td>
+<td style="text-align: center;">m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span
+class="math inline">\(dt\)</span></td>
+<td style="text-align: left;">Discretization time step</td>
+<td style="text-align: center;">s</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span
+class="math inline">\(N\)</span></td>
+<td style="text-align: left;">MPC prediction horizon</td>
+<td style="text-align: center;">–</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\(w_d, w_h,
+w_r\)</span></td>
+<td style="text-align: left;">Cost function weights</td>
+<td style="text-align: center;">–</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="sensor-specifications">Sensor Specifications</h1>
+<div class="center">
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Sensor</strong></th>
+<th style="text-align: center;"><strong>Type</strong></th>
+<th style="text-align: left;"><strong>Topic</strong></th>
+<th style="text-align: center;"><strong>Rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Overhead Camera</td>
+<td style="text-align: center;">RGB</td>
+<td style="text-align: left;">/overhead_camera/image</td>
+<td style="text-align: center;">30 Hz</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IMU</td>
+<td style="text-align: center;">6-axis</td>
+<td style="text-align: left;">/imu</td>
+<td style="text-align: center;">200 Hz</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LiDAR</td>
+<td style="text-align: center;">2D</td>
+<td style="text-align: left;">/scan</td>
+<td style="text-align: center;">5 Hz</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Wheel Encoders</td>
+<td style="text-align: center;">Quadrature</td>
+<td style="text-align: left;">/joint_states</td>
+<td style="text-align: center;">–</td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
